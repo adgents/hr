@@ -2,7 +2,6 @@
 # Copyright 2016-2019 Onestein (<https://www.onestein.eu>)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-import odoo
 from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
 from odoo.tools.misc import submap
@@ -127,7 +126,7 @@ class TestEmployeeFirstname(TransactionCase):
         self.assertEqual(self.employee1_id.name, "Jean-Pierre Carnaud")
 
     def test_lastname_firstname(self):
-        self.env["ir.config_parameter"].sudo().set_param(
+        self.env["ir.config_parameter"].sudo().set_str(
             "employee_names_order", "last_first"
         )
 
@@ -145,10 +144,18 @@ class TestEmployeeFirstname(TransactionCase):
         self.employee1_id.invalidate_recordset()
         self.assertEqual(self.employee1_id.name, "Carnaud Jean-Pierre")
 
-    @odoo.tests.tagged("-at_install", "post_install")
-    def test_update_name_post_install(self):
-        empl_demo = self.env.ref("hr.employee_admin")
-        self.assertEqual(empl_demo.lastname, "Administrator")
+    def test_install_employee_firstname(self):
+        """Names of existing employees are split when installing the module."""
+        employee = self.employee10_id
+        employee.flush_recordset()
+        self.env.cr.execute(
+            "UPDATE hr_employee SET firstname = NULL, lastname = NULL WHERE id = %s",
+            [employee.id],
+        )
+        employee.invalidate_recordset(["firstname", "lastname"])
+        self.env["hr.employee"]._install_employee_firstname()
+        self.assertEqual(employee.firstname, "Jan")
+        self.assertEqual(employee.lastname, "Van-Eyck")
 
     def test_no_name(self):
         self.env["hr.employee"].create({"firstname": "test"})
@@ -162,7 +169,7 @@ class TestEmployeeFirstname(TransactionCase):
             self.employee1_id.write({"firstname": "", "lastname": ""})
 
     def test_change_firstname_and_lastname_with_set_last_first_comma(self):
-        self.env["ir.config_parameter"].sudo().set_param(
+        self.env["ir.config_parameter"].sudo().set_str(
             "employee_names_order", "last_first_comma"
         )
         self.employee1_id.write({"firstname": "Jean-Pierre", "lastname": "Carnaud"})
@@ -171,7 +178,7 @@ class TestEmployeeFirstname(TransactionCase):
         self.assertEqual(self.employee1_id.name, "Carnaud, Jean-Pierre")
 
     def test_change_name_with_space_with_set_last_first_comma(self):
-        self.env["ir.config_parameter"].sudo().set_param(
+        self.env["ir.config_parameter"].sudo().set_str(
             "employee_names_order", "last_first_comma"
         )
         self.employee1_id.write({"name": "  Carnaud-Eyck,  Jean-Pierre"})

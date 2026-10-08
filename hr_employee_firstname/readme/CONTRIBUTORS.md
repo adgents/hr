@@ -6,3 +6,5 @@
 - Antonio Esposito (ONESTEIN BV) \<<a.esposito@onestein.nl>\>
 - Andrea Stirpe \<<a.stirpe@onestein.nl>\>
 - Vicent Castells \<<vicent@studio73.es>\>
+- [Adgents](https://github.com/adgents):
+  - Vincent Garcies \<<vincent.garcies@gmail.com>\>
